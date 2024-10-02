@@ -64,7 +64,9 @@ class Recipe(models.Model):
     name = models.CharField('Название', max_length=256)
     image = models.ImageField(
         'Изображениe',
-        upload_to='recipes_images',
+        upload_to='recipes/images/',
+        null=True,
+        default=None
     ) 
     text = models.TextField('Описание')
     author = models.ForeignKey(
