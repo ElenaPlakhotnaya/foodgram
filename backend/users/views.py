@@ -1,6 +1,6 @@
 from djoser.views import UserViewSet
-from users.models import User
-from users.serializers import UserSerializer, UserAvatarSerializer
+from users.models import User, Subscription
+from users.serializers import UserSerializer, UserAvatarSerializer, SubscriptionSerializer
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import viewsets, permissions
 from rest_framework.response import Response
@@ -26,3 +26,7 @@ class UserAvatarViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)
 
         return Response(serializer.data)
+
+class SubscriptionViewSet(UserViewSet):
+    queryset = Subscription.objects.all()
+    serializer_class = SubscriptionSerializer
