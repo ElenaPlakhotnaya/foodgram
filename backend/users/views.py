@@ -27,6 +27,18 @@ class UserAvatarViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-class SubscriptionViewSet(UserViewSet):
+class SubscriptionViewSet(viewsets.ModelViewSet):
     queryset = Subscription.objects.all()
     serializer_class = SubscriptionSerializer
+    def get_queryset(self):
+        return self.request.user.subscribing.all()
+
+class SubscribeViewSet(viewsets.ModelViewSet):
+    queryset = Subscription.objects.all()
+    serializer_class = SubscriptionSerializer
+
+    def get_queryset(self):
+        return self.request.user.subscribing.all()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

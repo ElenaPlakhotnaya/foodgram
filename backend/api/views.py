@@ -40,7 +40,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    filterset_fields = ('name',)
+    filterset_fields = ('name', 'is_favorited', 'is_in_shopping_cart')
     search_fields = ('name',)
 
     def list(self, request, *args, **kwargs):

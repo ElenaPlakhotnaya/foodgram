@@ -28,6 +28,6 @@ class User(AbstractUser):
     
 class Subscription(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='follower')
-    following = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='following')
+        User, on_delete=models.CASCADE, related_name='subscriber')
+    subscribing = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='subscribing')
