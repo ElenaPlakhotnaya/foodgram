@@ -3,7 +3,10 @@ from recipes.models import Recipe, Tag, Ingredient, RecipeIngredient, RecipeTag,
 from django.core.files.base import ContentFile
 import base64
 from users.serializers import UserSerializer
+from django.contrib.auth import get_user_model 
+from users.models import Subscription
 
+User = get_user_model()
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
@@ -16,16 +19,18 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class ShoppingCartSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Favourite
-        fields = '__all__'
 
+class FavouriteAndShoppingCrtSerializer(serializers.ModelSerializer):
+    image = Base64ImageField()
 
-class FavouriteSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Favourite
-        fields = '__all__'
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -218,3 +223,36 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+class SubscribingSerializer(serializers.ModelSerializer):
+    """сериализация подписчика"""
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'avatar', 'is_subscribed', 'recipes', 'recipes_count')
+        read_only_fields = ('id',)
+    def get_is_subscribed(self, obj):
+        return Subscription.objects.filter(user=obj).exists()
+    def get_recipes(self, obj):
+        recipes = Recipe.objects.filter(author=obj)
+        return RecipeSerializer(recipes, many=True).data 
+    def get_recipes_count(self, obj):
+        return Recipe.objects.filter(author=obj).count()
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    """создание подписки"""
+    subscribing = SubscribingSerializer(required=False)
+    class Meta:
+        model = Subscription
+        fields = ('subscribing',)
+
+    def validate(self, value):
+        user = value.get('user')
+        subscribing = value.get('subscribing')
+
+        if Subscription.objects.filter(user=user, subscribing=subscribing).exists():
+            raise serializers.ValidationError("Вы уже подписаны на этого пользователя.")
+        
+        return value  

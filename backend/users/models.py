@@ -31,3 +31,7 @@ class Subscription(models.Model):
         User, on_delete=models.CASCADE, related_name='subscriber')
     subscribing = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='subscribing')
+
+    class Meta:
+        verbose_name = 'Подписки'
+        verbose_name_plural = 'Подписки'
