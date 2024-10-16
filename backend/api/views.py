@@ -11,13 +11,14 @@ from api.permissions import AuthorOrReadOnly
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import status
 from rest_framework.decorators import action
+from api.filters import RecipeFilter
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('author', 'tags',) 
+    filterset_class = RecipeFilter
     permission_classes = [AuthorOrReadOnly, IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
@@ -58,7 +59,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 shopping_cart_item.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response({'errors': 'Рецепт уже был удалён из корзины'}, status=status.HTTP_400_BAD_REQUEST)
-        
+    @action(detail=True, methods=['get'], url_path='get-link')
+    def get_link(self, *args, **kwargs):
+        recipe = self.get_object()  
+        short_link = recipe.short_link
+        return Response({'short-link': short_link}, status=status.HTTP_200_OK)
 
 
 
@@ -90,14 +95,3 @@ class LinkViewSet(viewsets.ModelViewSet):
     pass
 
 
-"""
-class FavouriteViewSet(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Favourite.objects.all()
-    serializer_class = FavouriteSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    def get_queryset(self):
-        return Favourite.objects.filter(user=self.request.user)
-        
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-        """

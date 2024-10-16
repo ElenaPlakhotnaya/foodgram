@@ -17,7 +17,7 @@ class Base64ImageFieldAvatar(serializers.ImageField):
         return super().to_internal_value(data)
 
 class UserSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField(default=False)
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'first_name', 'last_name', 'avatar', 'is_subscribed')
@@ -25,7 +25,18 @@ class UserSerializer(serializers.ModelSerializer):
     
     def get_is_subscribed(self, obj):
         return Subscription.objects.filter(user=obj).exists()
-    
+    """
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['is_subscribed'] = self.get_is_subscribed(instance)
+
+        if representation['avatar']:
+            representation['avatar'] = self.context['request'].build_absolute_uri(instance.avatar.url)
+        else:
+            representation['avatar'] = None
+
+        return representation
+    """
 class UserAvatarSerializer(serializers.ModelSerializer):
     avatar = Base64ImageFieldAvatar(required=True)
 

@@ -85,10 +85,18 @@ class Recipe(models.Model):
         related_name='recipes',
     )
     cooking_time = models.IntegerField('Время приготовления',)
+    short_link = models.URLField(max_length=6, unique=True, blank=True, null=True)
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if not self.short_link:
+            self.short_link = str(self.pk)
+            self.save(update_fields=['short_link'])
 
     def __str__(self):
         return self.name
@@ -98,18 +106,22 @@ class Favourite(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE,
         verbose_name='Пользователь',
+        related_name='favorites',
     )
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE,
         verbose_name='Рецепт',
+        related_name='favorites',
     ) 
 
 class ShoppingCart(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE,
-        verbose_name='Пользователь',
+        verbose_name='Пользователь',        
+        related_name='shopping_carts',
     )
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE,
         verbose_name='Рецепт',
+        related_name='shopping_carts',
     ) 

@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.db.models import UniqueConstraint
 from django.contrib.auth.models import AbstractUser
 
 
@@ -31,7 +31,10 @@ class Subscription(models.Model):
         User, on_delete=models.CASCADE, related_name='subscriber')
     subscribing = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='subscribing')
-
+    
     class Meta:
+        constraints = [
+            UniqueConstraint(fields=['user', 'subscribing'], name='unique_together')
+        ]
         verbose_name = 'Подписки'
         verbose_name_plural = 'Подписки'
