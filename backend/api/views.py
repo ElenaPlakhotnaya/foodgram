@@ -40,7 +40,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 user=request.user, recipe=recipe
             ).exists():
                 return Response(
-                    {'errors': 'Рецепт уже был добавлен в избранное'},
+                    {'errors': 'Рецепт уже был добавлен в избранное.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             Favourite.objects.create(user=request.user, recipe=recipe)
@@ -54,7 +54,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 favourite.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(
-                {'errors': 'Рецепт уже был удален из избранного'},
+                {'errors': 'Рецепт уже был удален из избранного.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -71,7 +71,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 user=request.user, recipe=recipe
             ).exists():
                 return Response(
-                    {'errors': 'Рецепт уже был добавлен в корзину'},
+                    {'errors': 'Рецепт уже был добавлен в корзину.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             ShoppingCart.objects.create(user=request.user, recipe=recipe)
@@ -85,7 +85,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 shopping_cart_item.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response(
-                {'errors': 'Рецепт уже был удалён из корзины'},
+                {'errors': 'Рецепт уже был удалён из корзины.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -107,7 +107,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         if not recipes:
             return Response(
-                {'errors': 'Корзина пуста'},
+                {'errors': 'Корзина пуста.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

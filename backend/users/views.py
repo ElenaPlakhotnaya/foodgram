@@ -1,16 +1,12 @@
-from django.shortcuts import get_object_or_404
-
 from djoser.views import UserViewSet
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.pagination import (LimitOffsetPagination,
-                                       PageNumberPagination)
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from api.serializers import SubscribeSerializer, SubscribingSerializer
 from users.models import Subscription, User
-from users.serializers import (SubscriptionSerializer, UserAvatarSerializer,
-                               UserSerializer)
+from users.serializers import UserAvatarSerializer, UserSerializer
 
 
 class CustomPagination(PageNumberPagination):
@@ -25,21 +21,37 @@ class UserViewSet(UserViewSet):
     permission_classes = []
     pagination_class = CustomPagination
 
-    @action(detail=False, methods=['get'], url_path='me', permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=False, methods=['get'],
+        url_path='me',
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def me(self, request):
         user = request.user
         user_me = User.objects.get(id=user.id)
         serializer = UserSerializer(user_me)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post', 'delete'], url_path='subscribe', permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=True, methods=['post', 'delete'],
+        url_path='subscribe',
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def subscribe(self, request, *args, **kwargs):
         subscribing = self.get_object()
         if request.method == 'POST':
             if request.user == subscribing:
-                return Response({'errors': 'не можете подписаться сами на себя'}, status=status.HTTP_400_BAD_REQUEST)
-            if Subscription.objects.filter(user=request.user, subscribing=subscribing).exists():
-                return Response({'errors': 'подписка существует'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'errors': 'Вы не можете подписаться сами на себя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if Subscription.objects.filter(
+                user=request.user, subscribing=subscribing
+            ).exists():
+                return Response(
+                    {'errors': 'Вы уже подписаны на этого пользователя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             Subscription.objects.create(
                 user=request.user, subscribing=subscribing)
             serializer = SubscribingSerializer(subscribing)
@@ -51,9 +63,16 @@ class UserViewSet(UserViewSet):
             if subscription:
                 subscription.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({'errors': 'подписки не существует'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'errors': 'Вы не подписаны на этого пользователя.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-    @action(detail=False, methods=['get'], url_path='subscriptions', permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=False, methods=['get'],
+        url_path='subscriptions',
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def subscriptions(self, request):
         user_subscriptions = Subscription.objects.filter(
             subscribing=request.user)
@@ -63,7 +82,11 @@ class UserViewSet(UserViewSet):
         serializer = SubscribeSerializer(paginated_subscriptions, many=True)
         return paginator.get_paginated_response(serializer.data)
 
-    @action(detail=False, methods=['put', 'delete'], url_path='me/avatar', permission_classes=[permissions.IsAuthenticated])
+    @action(
+        detail=False, methods=['put', 'delete'],
+        url_path='me/avatar',
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def avatar(self, request):
         user = request.user
 
@@ -73,12 +96,21 @@ class UserViewSet(UserViewSet):
 
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'errors': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         if request.method == 'DELETE':
             if user.avatar:
                 user.avatar.delete(save=False)
                 user.avatar = None
                 user.save()
-                return Response({'status': 'Аватар удален'}, status=status.HTTP_204_NO_CONTENT)
-            return Response({'errors': 'Аватар не существует'}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {'status': 'Аватар удален.'},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+            return Response(
+                {'errors': 'Объект не существует.'},
+                status=status.HTTP_404_NOT_FOUND
+            )

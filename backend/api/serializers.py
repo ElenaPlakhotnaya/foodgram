@@ -67,45 +67,8 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     def validate_amount(self, value):
         if value < 1:
             raise serializers.ValidationError(
-                'Параметр "amount" должен быть больше 1')
+                'Параметр "amount" должен быть больше 1.')
         return value
-
-
-class RecipeSafeMethodsSerializer(serializers.ModelSerializer):
-    ingredients = RecipeIngredientSerializer(many=True, read_only=True)
-    tags = TagSerializer(many=True, read_only=True)
-    image = Base64ImageField(required=False, allow_null=True)
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
-    is_in_shopping_cart = serializers.SerializerMethodField()
-    is_favorited = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Recipe
-        fields = [
-            'id', 'name', 'image', 'text', 'author', 'ingredients',
-            'tags', 'cooking_time', 'is_in_shopping_cart', 'is_favorited'
-        ]
-
-    def get_is_favorited(self, obj):
-        return Favourite.objects.filter(recipe=obj).exists()
-
-    def get_is_in_shopping_cart(self, obj):
-        return ShoppingCart.objects.filter(recipe=obj).exists()
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['ingredients'] = [
-            {
-                'id': ingredient.ingredient.id,
-                'name': ingredient.ingredient.name,
-                'measurement_unit': ingredient.ingredient.measurement_unit,
-                'amount': ingredient.amount
-            }
-            for ingredient in instance.recipe_ingredients.all()
-        ]
-        return representation
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -174,7 +137,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     def validate_cooking_time(self, value):
         if value < 1:
             raise serializers.ValidationError(
-                'Время приготовления должно превышать 1 минуту')
+                'Время приготовления должно превышать 1 минуту.')
         return value
 
     def validate(self, value):
@@ -182,18 +145,19 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = value.get('recipe_ingredients')
 
         if not tags:
-            raise serializers.ValidationError('Необходимо выбрать тэги')
+            raise serializers.ValidationError('Необходимо выбрать тэги.')
         if not ingredients:
-            raise serializers.ValidationError('Необходимо выбрать ингридиенты')
+            raise serializers.ValidationError(
+                'Необходимо выбрать ингридиенты.')
 
         return value
 
     def validate_tags(self, value):
 
         if len(value) != len(set(value)):
-            raise serializers.ValidationError('Теги должны быть уникальны')
+            raise serializers.ValidationError('Теги не должны повторяться.')
         if len(value) < 1:
-            raise serializers.ValidationError('Поле не может быть пустым.')
+            raise serializers.ValidationError('Добавьте теги.')
         return value
 
     def validate_ingredients(self, value):
@@ -205,7 +169,7 @@ class RecipeSerializer(serializers.ModelSerializer):
                     'Ингредиенты не должны повторяться.')
             ingredient_list.append(item)
         if len(ingredient_list) < 1:
-            raise serializers.ValidationError('Поле не может быть пустым.')
+            raise serializers.ValidationError('Добавьте ингридиенты.')
 
         return value
 
@@ -263,7 +227,7 @@ class SubscribingSerializer(serializers.ModelSerializer):
 
         if value == self.context['request'].user:
             raise serializers.ValidationError(
-                'Вы не можете подписаться на себя')
+                'Вы не можете подписаться на себя.')
         return value
 
 
@@ -292,5 +256,5 @@ class SubscribeSerializer(serializers.ModelSerializer):
                 'Вы уже подписаны на этого пользователя.')
         if value == self.context['request'].user:
             raise serializers.ValidationError(
-                'Вы не можете подписаться на себя')
+                'Вы не можете подписаться на себя.')
         return value
