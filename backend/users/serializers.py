@@ -1,10 +1,14 @@
+import base64
+
+from django.core.files.base import ContentFile
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from users.models import User, Subscription
-from django.core.files.base import ContentFile
-import base64
-#from api.serializers import RecipeSerializer
+
+# from api.serializers import RecipeSerializer
 from recipes.models import Recipe
+from users.models import Subscription, User
+
 
 class Base64ImageFieldAvatar(serializers.ImageField):
     def to_internal_value(self, data):
@@ -16,13 +20,16 @@ class Base64ImageFieldAvatar(serializers.ImageField):
 
         return super().to_internal_value(data)
 
+
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField(default=False)
+
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'avatar', 'is_subscribed')
+        fields = ('id', 'email', 'username', 'first_name',
+                  'last_name', 'avatar', 'is_subscribed')
         read_only_fields = ('id',)
-    
+
     def get_is_subscribed(self, obj):
         return Subscription.objects.filter(user=obj).exists()
     """
@@ -37,12 +44,15 @@ class UserSerializer(serializers.ModelSerializer):
 
         return representation
     """
+
+
 class UserAvatarSerializer(serializers.ModelSerializer):
     avatar = Base64ImageFieldAvatar(required=True)
 
     class Meta:
         model = User
         fields = ('avatar',)
+
 
 class SubscriptionSerializer(serializers.ModelSerializer):
 
@@ -55,15 +65,17 @@ class SubscriptionSerializer(serializers.ModelSerializer):
                 fields=['user', 'subscribing']
             )
         ]
+
     def validate_subscribing(self, value):
         if value == self.context['request'].user:
             raise serializers.ValidationError(
                 "Вы не можете подписаться сами на себя")
         return value
-    
+
     def create(self, validated_data):
         subscription = Subscription.objects.create(**validated_data)
         return subscription
+
 
 """
 class SubscribingSerializer(serializers.ModelSerializer):
