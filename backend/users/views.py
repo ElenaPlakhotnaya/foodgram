@@ -1,7 +1,7 @@
 from djoser.views import UserViewSet
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 
 from api.serializers import SubscribeSerializer, SubscribingSerializer
@@ -9,17 +9,11 @@ from users.models import Subscription, User
 from users.serializers import UserAvatarSerializer, UserSerializer
 
 
-class CustomPagination(PageNumberPagination):
-    page_size = 5
-    page_size_query_param = 'limit'
-    max_page_size = 100
-
-
 class UserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = []
-    pagination_class = CustomPagination
+    pagination_class = LimitOffsetPagination
 
     @action(
         detail=False, methods=['get'],
@@ -76,7 +70,7 @@ class UserViewSet(UserViewSet):
     def subscriptions(self, request):
         user_subscriptions = Subscription.objects.filter(
             subscribing=request.user)
-        paginator = self.pagination_class()
+        paginator = self.paginator
         paginated_subscriptions = paginator.paginate_queryset(
             user_subscriptions, request)
         serializer = SubscribeSerializer(paginated_subscriptions, many=True)
