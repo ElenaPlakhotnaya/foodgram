@@ -1,21 +1,11 @@
-import base64
 
-from django.core.files.base import ContentFile
 
 from rest_framework import serializers
 
 from users.models import Subscription, User
+from api.fields import Base64ImageField
 
 
-class Base64ImageFieldAvatar(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
-        return super().to_internal_value(data)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -32,7 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserAvatarSerializer(serializers.ModelSerializer):
-    avatar = Base64ImageFieldAvatar(required=True)
+    avatar = Base64ImageField(required=True)
 
     class Meta:
         model = User
