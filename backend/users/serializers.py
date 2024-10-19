@@ -7,6 +7,7 @@ from users.models import Subscription, User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализация пользователя."""
     is_subscribed = serializers.SerializerMethodField(default=False)
 
     class Meta:
@@ -20,6 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserAvatarSerializer(serializers.ModelSerializer):
+    """Сериализация аватара пользователя."""
     avatar = Base64ImageField(required=True)
 
     class Meta:

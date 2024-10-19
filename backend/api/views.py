@@ -1,10 +1,10 @@
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
@@ -13,13 +13,14 @@ from api.permissions import AuthorOrReadOnly
 from api.serializers import (FavouriteAndShoppingCrtSerializer,
                              IngredientSerializer, RecipeReadSerializer,
                              RecipeSerializer, TagSerializer)
-from recipes.models import Favourite, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import (Favourite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
+from users.views import CustomPagination
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    # serializer_class = RecipeSerializer
-    pagination_class = LimitOffsetPagination
+    pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     permission_classes = [AuthorOrReadOnly, IsAuthenticatedOrReadOnly]
@@ -98,41 +99,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def download_shopping_cart(self, request):
+        ingredients = (
+            RecipeIngredient.objects
+            .filter(recipe__shopping_carts__user=request.user)
+            .values('ingredient__name', 'ingredient__measurement_unit')
+            .annotate(total_amount=Sum('amount'))
+        )
 
-        shopping_cart_items = ShoppingCart.objects.filter(user=request.user)
-        recipes = [item.recipe for item in shopping_cart_items]
-
-        if not recipes:
+        if not ingredients.exists():
             return Response(
                 {'errors': 'Корзина пуста.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        ingredients = {}
-
-        for recipe in recipes:
-            for recipe_ingredient in recipe.recipe_ingredients.all():
-                name = recipe_ingredient.ingredient.name
-                measurement_unit = (
-                    recipe_ingredient.ingredient.measurement_unit
-                )
-                amount = recipe_ingredient.amount
-
-                key = f"{name} ({measurement_unit})"
-
-                if key in ingredients:
-                    ingredients[key] += amount
-                else:
-                    ingredients[key] = amount
-
         shopping_list_text = 'Список покупок:\n\n'
-        for item, total_amount in ingredients.items():
-            shopping_list_text += f"{item} — {total_amount}\n"
+        for item in ingredients:
+            shopping_list_text += (
+                f'{item["ingredient__name"]}, '
+                f'({item["ingredient__measurement_unit"]}) — '
+                f'{item["total_amount"]}\n'
+            )
 
         response = HttpResponse(shopping_list_text, content_type='text/plain')
         response[
-            'Content-Disposition'
-        ] = 'attachment; filename="shopping_cart.txt"'
+            'Content-Disposition'] = 'attachment; filename="shopping_cart.txt"'
 
         return response
 
