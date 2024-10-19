@@ -1,10 +1,13 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import UniqueConstraint, CheckConstraint, Q, F
+from django.db.models import CheckConstraint, F, Q, UniqueConstraint
+
 from users.constants import EMEIL_LENGTH, NAME_LENGTH
 
+
 class User(AbstractUser):
-    email = models.EmailField('Адрес эл.почты', max_length=EMEIL_LENGTH, unique=True)
+    email = models.EmailField(
+        'Адрес эл.почты', max_length=EMEIL_LENGTH, unique=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = (
@@ -19,7 +22,8 @@ class User(AbstractUser):
     username = models.CharField(
         'Логин', max_length=NAME_LENGTH, unique=True, blank=False)
     first_name = models.CharField('Имя', max_length=NAME_LENGTH, blank=False)
-    last_name = models.CharField('Фамилия', max_length=NAME_LENGTH, blank=False)
+    last_name = models.CharField(
+        'Фамилия', max_length=NAME_LENGTH, blank=False)
 
     class Meta:
         verbose_name = 'Пользователь'

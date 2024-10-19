@@ -1,15 +1,15 @@
+from django.contrib.auth import get_user_model
+from django.db.models import F
 from django.shortcuts import get_object_or_404
 
-from django.contrib.auth import get_user_model
-
-from api.fields import Base64ImageField
 from rest_framework import serializers
 
+from api.fields import Base64ImageField
 from recipes.models import (Favourite, Ingredient, Recipe, RecipeIngredient,
                             RecipeTag, ShoppingCart, Tag)
 from users.models import Subscription
 from users.serializers import UserSerializer
-from django.db.models import F
+
 User = get_user_model()
 
 
@@ -24,6 +24,7 @@ class FavouriteAndShoppingCrtSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time'
         )
+
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,14 +45,15 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'amount')
-    
+
 
 class IngredientSerializer(serializers.ModelSerializer):
     amount = RecipeIngredientSerializer(read_only=True)
+
     class Meta:
         model = Ingredient
         fields = '__all__'
-    
+
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
@@ -111,26 +113,23 @@ class RecipeSerializer(serializers.ModelSerializer):
         for ingredient_data in ingredients_data:
             ingredient_id = ingredient_data.pop('id')
             amount = ingredient_data.get('amount')
-            if not Ingredient.objects.filter(id=ingredient_id).exists(): 
-                raise serializers.ValidationError( 
-                    f'Ингредиент с ID {ingredient_id} не найден.')            
-        
+            if not Ingredient.objects.filter(id=ingredient_id).exists():
+                raise serializers.ValidationError(
+                    f'Ингредиент с ID {ingredient_id} не найден.')
+
             if amount < 1:
                 raise serializers.ValidationError(
-                    f'Количество не может быть меньше 1.'
+                    f'{amount} не может быть меньше 1.'
                 )
 
-      
             ingredient = Ingredient.objects.get(id=ingredient_id)
 
-        
             recipe_ingredients.append(RecipeIngredient(
                 recipe=recipe,
-                ingredient=ingredient, 
+                ingredient=ingredient,
                 amount=amount
             ))
 
-   
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
         return recipe
@@ -163,8 +162,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         for item in value:
             if item in ingredient_list:
                 raise serializers.ValidationError(
-                    'Ингредиенты не должны повторяться.'
-                )
+                    'Ингредиенты не должны повторяться.')
             ingredient_list.append(item)
 
         if len(ingredient_list) < 1:
@@ -189,17 +187,16 @@ class RecipeSerializer(serializers.ModelSerializer):
 
         instance.recipe_ingredients.all().delete()
         for ingredient_data in ingredients_data:
-            
-            
+
             ingredient_id = ingredient_data.pop('id')
-            
+
             amount = ingredient_data.get('amount')
-            if not Ingredient.objects.filter(id=ingredient_id).exists(): 
-                raise serializers.ValidationError( 
-                    f'Ингредиент с ID {ingredient_id} не найден.')               
+            if not Ingredient.objects.filter(id=ingredient_id).exists():
+                raise serializers.ValidationError(
+                    f'Ингредиент с ID {ingredient_id} не найден.')
             if amount < 1:
                 raise serializers.ValidationError(
-                    f'Количество не может быть меньше 1.'
+                    f'{amount} не может быть меньше 1.'
                 )
 
             ingredient = Ingredient.objects.get(id=ingredient_id)
@@ -223,7 +220,9 @@ class SubscribingSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def get_is_subscribed(self, obj):
-        return Subscription.objects.filter(user=obj).exists()
+        return Subscription.objects.filter(
+            user=self.context['request'].user,
+            subscribing=obj).exists()
 
     def validate_subscribing(self, value):
 

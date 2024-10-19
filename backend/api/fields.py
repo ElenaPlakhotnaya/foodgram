@@ -1,6 +1,9 @@
 import base64
+
 from django.core.files.base import ContentFile
+
 from rest_framework import serializers
+
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):

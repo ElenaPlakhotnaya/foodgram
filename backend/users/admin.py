@@ -1,11 +1,12 @@
 from django.contrib import admin
-
-from users.models import User, Subscription
-from rest_framework.authtoken.models import TokenProxy
 from django.contrib.auth.models import Group
 
+from users.models import Subscription, User
+
+
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('email', 'username', 'first_name', 'last_name', 'subscribing_count', 'recipe_count')
+    list_display = ('email', 'username', 'first_name',
+                    'last_name', 'subscribing_count', 'recipe_count')
     search_fields = ('email', 'username',)
     empty_value_display = '---'
 
@@ -17,6 +18,7 @@ class UserAdmin(admin.ModelAdmin):
 
     subscribing_count.short_description = 'Количество подписчиков'
     recipe_count.short_description = 'Количество рецептов'
+
 
 class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('user', 'subscribing')

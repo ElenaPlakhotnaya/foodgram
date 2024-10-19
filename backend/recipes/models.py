@@ -1,10 +1,12 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
-from users.models import User
-from recipes.constants import (TAG_LENGTH, INGR_NAME_LENGTH, 
-                               INGR_UNIT_LENGTH, RECIPE_NAME_LENGTH, 
-                               SHORT_LINK_LENGTH, MIN, MAX)
 from django.db.models import UniqueConstraint
+
+from recipes.constants import (INGR_NAME_LENGTH, INGR_UNIT_LENGTH, MAX, MIN,
+                               RECIPE_NAME_LENGTH, SHORT_LINK_LENGTH,
+                               TAG_LENGTH)
+from users.models import User
+
 
 class Tag(models.Model):
     name = models.CharField('Название', max_length=TAG_LENGTH, unique=True)
@@ -18,15 +20,17 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField('Название', max_length=INGR_NAME_LENGTH)
-    measurement_unit = models.CharField('Единица измерения', max_length=INGR_UNIT_LENGTH)
+    measurement_unit = models.CharField(
+        'Единица измерения', max_length=INGR_UNIT_LENGTH)
 
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         constraints = [
-            UniqueConstraint(fields=['name', 'measurement_unit'], name='unique_name_measurement')
+            UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_name_measurement')
         ]
-
 
 
 class RecipeIngredient(models.Model):
@@ -47,6 +51,7 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveSmallIntegerField(
         'Количество в рецепте',
     )
+
     class Meta:
         verbose_name = 'Рецепт-ингредиент'
         verbose_name_plural = 'Рецепты-ингредиенты'
@@ -67,12 +72,14 @@ class RecipeTag(models.Model):
         on_delete=models.CASCADE,
         related_name='recipe_tags'
     )
+
     class Meta:
-        
+
         verbose_name = 'Рецепт-тег'
         verbose_name_plural = 'Рецепты-теги'
         constraints = [
-            UniqueConstraint(fields=['recipe', 'tag'], name='unique_recipe_tag')
+            UniqueConstraint(fields=['recipe', 'tag'],
+                             name='unique_recipe_tag')
         ]
 
 
@@ -144,14 +151,16 @@ class Favourite(models.Model):
         verbose_name='Рецепт',
         related_name='favorites',
     )
-    
+
     class Meta:
-        
+
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         constraints = [
-            UniqueConstraint(fields=['user', 'recipe'], name='unique_fav_user_recipe')
+            UniqueConstraint(fields=['user', 'recipe'],
+                             name='unique_fav_user_recipe')
         ]
+
 
 class ShoppingCart(models.Model):
     user = models.ForeignKey(
@@ -169,5 +178,6 @@ class ShoppingCart(models.Model):
         verbose_name = 'Корзина покупок'
         verbose_name_plural = 'Корзина покупок'
         constraints = [
-            UniqueConstraint(fields=['user', 'recipe'], name='unique_shop_user_recipe')
+            UniqueConstraint(fields=['user', 'recipe'],
+                             name='unique_shop_user_recipe')
         ]

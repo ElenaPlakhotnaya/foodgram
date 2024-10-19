@@ -1,22 +1,26 @@
+from django.shortcuts import get_object_or_404
+
 from djoser.views import UserViewSet
 from rest_framework import permissions, status
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from api.serializers import (FavouriteAndShoppingCrtSerializer,
-                             RecipeSerializer, SubscribeSerializer,
-                             SubscribingSerializer)
-from recipes.models import Recipe
+from api.serializers import SubscribingSerializer
 from users.models import Subscription, User
 from users.serializers import UserAvatarSerializer, UserSerializer
-from django.shortcuts import get_object_or_404
+
+
+class CustomPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
+    max_page_size = 100
+
 
 class UserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = []
-    pagination_class = LimitOffsetPagination
+    pagination_class = CustomPagination
 
     @action(
         detail=False, methods=['get'],
@@ -36,7 +40,7 @@ class UserViewSet(UserViewSet):
     )
     def subscribe_post(self, request, *args, **kwargs):
         subscribing = self.get_object()
-        
+
         if request.user == subscribing:
             return Response(
                 {'errors': 'Вы не можете подписаться сами на себя.'},
@@ -51,11 +55,15 @@ class UserViewSet(UserViewSet):
             )
         Subscription.objects.create(
             user=request.user, subscribing=subscribing)
-        serializer = SubscribingSerializer(subscribing)
+        serializer = SubscribingSerializer(
+            subscribing,
+            context={'request': request}
+        )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     @subscribe_post.mapping.delete
     def subscribe_delete(self, request, *args, **kwargs):
-        subscribing = self.get_object()    
+        subscribing = self.get_object()
         subscription = Subscription.objects.filter(
             user=request.user, subscribing=subscribing)
         if subscription:
@@ -73,11 +81,13 @@ class UserViewSet(UserViewSet):
     )
     def subscriptions(self, request):
         user_subscriptions = Subscription.objects.filter(
-            subscribing=request.user)
-        paginator = self.paginator
+            subscribing=request.user).order_by('id')
+        paginator = CustomPagination()
         paginated_subscriptions = paginator.paginate_queryset(
             user_subscriptions, request)
-        serializer = SubscribeSerializer(paginated_subscriptions, many=True)
+        serializer = SubscribingSerializer(paginated_subscriptions,
+                                           context={'request': self.request},
+                                           many=True)
         return paginator.get_paginated_response(serializer.data)
 
     @action(
@@ -88,7 +98,6 @@ class UserViewSet(UserViewSet):
     def avatar_put(self, request):
         user = request.user
 
-        
         serializer = UserAvatarSerializer(user, data=request.data)
         if serializer.is_valid():
 
@@ -98,6 +107,7 @@ class UserViewSet(UserViewSet):
             {'errors': serializer.errors},
             status=status.HTTP_400_BAD_REQUEST
         )
+
     @avatar_put.mapping.delete
     def avatar_delete(self, request):
         user = request.user
