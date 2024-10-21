@@ -10,4 +10,4 @@ RUN pip install -r requirements.txt --no-cache-dir
 
 COPY . .
 
-CMD ["gunicorn", "--bind", "0.0.0.0:9000", "foodgram.wsgi", "python", "manage.py", "runserver"]
+CMD ["gunicorn", "--bind", "0.0.0.0:9090", "foodgram.wsgi", "python", "manage.py", "runserver"]
