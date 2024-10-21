@@ -14,6 +14,7 @@ from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.views import CustomPagination
 from django.shortcuts import get_object_or_404, redirect
 
+
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = CustomPagination
