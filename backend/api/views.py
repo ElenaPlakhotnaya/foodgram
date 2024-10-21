@@ -12,7 +12,7 @@ from api.serializers import (IngredientSerializer, RecipeReadSerializer,
                              RecipeSerializer, TagSerializer)
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.views import CustomPagination
-
+from django.shortcuts import get_object_or_404, redirect
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
@@ -127,3 +127,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
     pagination_class = None
+
+def redirect_to_full_url(request, short_link):
+    recipe = get_object_or_404(Recipe, short_link=short_link)
+    return redirect(recipe.full_url)

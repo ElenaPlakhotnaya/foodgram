@@ -122,6 +122,7 @@ class Recipe(models.Model):
             MaxValueValidator(MAX)
         ]
     )
+    full_url = models.URLField()
     short_link = models.URLField(
         max_length=SHORT_LINK_LENGTH, unique=True, blank=True, null=True)
 

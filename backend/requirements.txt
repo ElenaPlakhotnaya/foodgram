@@ -12,6 +12,7 @@ django-templated-mail==1.1.1
 djangorestframework==3.15.2
 djangorestframework-simplejwt==4.7.2
 djoser==2.1.0
+environs==11.0.0
 flake8==6.0.0
 flake8-isort==6.0.0
 idna==3.10
@@ -19,13 +20,17 @@ isort==5.13.2
 itypes==1.2.0
 Jinja2==3.1.4
 MarkupSafe==2.1.5
+marshmallow==3.23.0
 mccabe==0.7.0
 oauthlib==3.2.2
+packaging==24.1
 pillow==10.4.0
+psycopg2-binary==2.9.3
 pycodestyle==2.10.0
 pycparser==2.22
 pyflakes==3.0.1
 PyJWT==2.9.0
+python-dotenv==1.0.1
 python3-openid==3.2.0
 pytz==2024.2
 requests==2.32.3
