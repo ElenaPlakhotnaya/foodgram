@@ -50,6 +50,10 @@ class RecipeIngredient(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         'Количество в рецепте',
+        validators=[
+            MinValueValidator(MIN),
+            MaxValueValidator(MAX)
+        ]
     )
 
     class Meta:
@@ -103,10 +107,6 @@ class Recipe(models.Model):
         blank=False,
         verbose_name='Список ингридиентов',
         related_name='recipes',
-        validators=[
-            MinValueValidator(MIN),
-            MaxValueValidator(MAX)
-        ]
     )
     tags = models.ManyToManyField(
         Tag,

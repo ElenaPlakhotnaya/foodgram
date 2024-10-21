@@ -11,15 +11,15 @@ class RecipeAdmin(admin.ModelAdmin):
     list_filter = ('tags',)
     empty_value_display = '---'
 
+    @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):
         return ', '.join(
             [ingredient.name for ingredient in obj.ingredients.all()]
         )
-    get_ingredients.short_description = 'Ингредиенты'
 
+    @admin.display(description='Теги')
     def get_tags(self, obj):
         return ', '.join([tag.name for tag in obj.tags.all()])
-    get_tags.short_description = 'Теги'
 
     def save_model(self, request, obj, change):
         if not obj.ingredients.exists():

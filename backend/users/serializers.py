@@ -3,7 +3,7 @@
 from rest_framework import serializers
 
 from api.fields import Base64ImageField
-from users.models import Subscription, User
+from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,7 +17,10 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
     def get_is_subscribed(self, obj):
-        return Subscription.objects.filter(user=obj).exists()
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.subscribing.filter(user=request.user).exists()
+        return False
 
 
 class UserAvatarSerializer(serializers.ModelSerializer):

@@ -10,14 +10,13 @@ class UserAdmin(admin.ModelAdmin):
     search_fields = ('email', 'username',)
     empty_value_display = '---'
 
+    @admin.display(description='Количество подписчиков')
     def subscribing_count(self, obj):
         return obj.subscribing.count()
 
+    @admin.display(description='Количество рецептов')
     def recipe_count(self, obj):
         return obj.recipe_set.count()
-
-    subscribing_count.short_description = 'Количество подписчиков'
-    recipe_count.short_description = 'Количество рецептов'
 
 
 class SubscriptionAdmin(admin.ModelAdmin):
