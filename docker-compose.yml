@@ -24,10 +24,10 @@ services:
     volumes:
       - static:/static
   gateway:
-    build: ./nginx/
+    build: ./infra/
     env_file: .env
     ports:
-      - 9000:80
+      - 9090:80
     volumes:
       - static:/static
       - media:/media
