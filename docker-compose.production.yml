@@ -1,4 +1,3 @@
-version: '3'
 volumes:
   pg_data:
   static:
@@ -19,13 +18,14 @@ services:
       - media:/app/media
   frontend:
     image: lenaplahosha/foodgram_frontend
+    command: cp -r /app/build/. /static/
     volumes:
-      - static:/app/result_build/
+      - static:/static
   gateway:
     image: lenaplahosha/foodgram_gateway
     env_file: .env
     ports:
       - 9090:80
     volumes:
-      - static:/staticfiles/
+      - static:/static
       - media:/media
