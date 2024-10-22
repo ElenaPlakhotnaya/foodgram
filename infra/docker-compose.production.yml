@@ -19,7 +19,7 @@ services:
   frontend:
     image: lenaplahosha/foodgram_frontend
     volumes:
-      - static:/app/result_build/
+      - static:/app/build/
   gateway:
     image: lenaplahosha/foodgram_gateway
     env_file: .env
