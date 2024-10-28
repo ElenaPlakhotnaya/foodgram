@@ -34,8 +34,8 @@ DEBUG = env.bool('DEBUG', False)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1'])
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://foodgrambyplahosha.ddns.net',
-    'https://www.foodgrambyplahosha.ddns.net',
+    'https://foodgramplahosha.zapto.org',
+    'https://www.foodgramplahosha.zapto.org',
 ]
 # Application definition
 
