@@ -130,6 +130,3 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
 
-def redirect_to_full_url(request, short_link):
-    recipe = get_object_or_404(Recipe, short_link=short_link)
-    return redirect(recipe.full_url)
