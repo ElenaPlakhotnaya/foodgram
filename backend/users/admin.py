@@ -16,7 +16,7 @@ class UserAdmin(admin.ModelAdmin):
 
     @admin.display(description='Количество рецептов')
     def recipe_count(self, obj):
-        return obj.recipe_set.count()
+        return obj.recipes.count()
 
 
 class SubscriptionAdmin(admin.ModelAdmin):
