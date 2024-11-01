@@ -3,8 +3,7 @@ from django.db import models
 from django.db.models import UniqueConstraint
 
 from recipes.constants import (INGR_NAME_LENGTH, INGR_UNIT_LENGTH, MAX, MIN,
-                               RECIPE_NAME_LENGTH, SHORT_LINK_LENGTH,
-                               TAG_LENGTH)
+                               RECIPE_NAME_LENGTH, TAG_LENGTH)
 from users.models import User
 
 
