@@ -16,6 +16,9 @@ class Tag(models.Model):
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
+    def __str__(self):
+        return self.name
+
 
 class Ingredient(models.Model):
     name = models.CharField('Название', max_length=INGR_NAME_LENGTH)
@@ -30,6 +33,9 @@ class Ingredient(models.Model):
                 fields=['name', 'measurement_unit'],
                 name='unique_name_measurement')
         ]
+
+    def __str__(self):
+        return self.name
 
 
 class RecipeIngredient(models.Model):
