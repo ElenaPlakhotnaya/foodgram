@@ -135,11 +135,6 @@ class Recipe(models.Model):
             self.short_link = (
                 f'https://foodgrambyplahosha.ddns.net/r/{self.pk}/'
             )
-            while Recipe.objects.filter(short_link=self.short_link).exists():
-                self.short_link = (
-                    'https://foodgrambyplahosha.ddns.net/r/'
-                    f'{str(self.pk)+"a"}/'
-                )
             self.save(update_fields=['short_link'])
         if not self.full_link:
             self.full_link = (
