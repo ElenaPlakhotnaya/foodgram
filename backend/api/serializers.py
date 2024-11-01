@@ -283,23 +283,31 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
 class FavouriteSerializer(serializers.ModelSerializer):
     """Сериализация избранного."""
-    class Meta:
 
+    class Meta:
         model = Recipe
         fields = (
-            'id', 'name', 'image', 'text', 'author',
-            'ingredients', 'tags', 'cooking_time',
+            'id',
         )
 
-    def add_to_favorites(self, user, pk):
+    def validate(self, data):
+        user = self.context['request'].user
+        pk = self.context['id']
         recipe = get_object_or_404(Recipe, id=pk)
         if recipe.favorites.filter(user=user).exists():
             raise serializers.ValidationError(
                 'Рецепт уже был добавлен в избранное.')
+        return data
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        pk = self.context['id']
+        recipe = get_object_or_404(Recipe, id=pk)
         favourite_item = user.favorites.create(recipe=recipe)
         return favourite_item.recipe
 
-    def remove_from_favorites(self, user, pk):
+    def delete(self, user):
+        pk = self.context['id']
         recipe = get_object_or_404(Recipe, id=pk)
         favourite = user.favorites.filter(recipe=recipe).first()
         if not favourite:
@@ -310,23 +318,29 @@ class FavouriteSerializer(serializers.ModelSerializer):
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     """Сериализация корзины покупок."""
+
     class Meta:
-
         model = Recipe
-        fields = (
-            'id', 'name', 'image', 'text', 'author',
-            'ingredients', 'tags', 'cooking_time',
-        )
+        fields = ('id',)
 
-    def add_to_shopping_cart(self, user, pk):
+    def validate(self, data):
+        user = self.context['request'].user
+        pk = self.context['id']
         recipe = get_object_or_404(Recipe, id=pk)
         if recipe.shopping_carts.filter(user=user).exists():
             raise serializers.ValidationError(
                 'Рецепт уже был добавлен в корзину.')
+        return data
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        pk = self.context['id']
+        recipe = get_object_or_404(Recipe, id=pk)
         shopping_cart_item = user.shopping_carts.create(recipe=recipe)
         return shopping_cart_item.recipe
 
-    def remove_from_shopping_cart(self, user, pk):
+    def delete(self, user):
+        pk = self.context['id']
         recipe = get_object_or_404(Recipe, id=pk)
         shopping_cart_item = user.shopping_carts.filter(recipe=recipe).first()
         if not shopping_cart_item:

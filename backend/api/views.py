@@ -52,16 +52,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.remove_item_from_list(request.user, pk, 'shopping_cart')
 
     def add_item_to_list(self, user, pk, list_type):
-
         try:
             if list_type == 'favorite':
-                serializer = FavouriteSerializer()
-                favourite_item = serializer.add_to_favorites(user, pk)
+                serializer = FavouriteSerializer(
+                    data={}, context={'request': self.request, 'id': pk})
+                serializer.is_valid(raise_exception=True)
+                favourite_item = serializer.create(serializer.validated_data)
                 item_data = FavouriteAndShoppingCrtSerializer(
                     favourite_item).data
             elif list_type == 'shopping_cart':
-                serializer = ShoppingCartSerializer()
-                shopping_cart_item = serializer.add_to_shopping_cart(user, pk)
+                serializer = ShoppingCartSerializer(
+                    data={}, context={'request': self.request, 'id': pk})
+                serializer.is_valid(raise_exception=True)
+                shopping_cart_item = serializer.create(
+                    serializer.validated_data)
                 item_data = FavouriteAndShoppingCrtSerializer(
                     shopping_cart_item).data
             return Response(item_data, status=status.HTTP_201_CREATED)
@@ -71,14 +75,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
     def remove_item_from_list(self, user, pk, list_type):
-
         try:
             if list_type == 'favorite':
-                serializer = FavouriteSerializer()
-                serializer.remove_from_favorites(user, pk)
+                serializer = FavouriteSerializer(
+                    context={'request': self.request, 'id': pk})
+                serializer.delete(user)
             elif list_type == 'shopping_cart':
-                serializer = ShoppingCartSerializer()
-                serializer.remove_from_shopping_cart(user, pk)
+                serializer = ShoppingCartSerializer(
+                    context={'request': self.request, 'id': pk})
+                serializer.delete(user)
             return Response(status=status.HTTP_204_NO_CONTENT)
         except serializers.ValidationError as e:
             return Response(
