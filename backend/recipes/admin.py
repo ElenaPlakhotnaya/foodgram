@@ -32,7 +32,7 @@ class RecipeAdmin(admin.ModelAdmin):
     def get_tags(self, obj):
         return ', '.join([tag.name for tag in obj.tags.all()])
 
-    def save_model(self, self, request, obj, form, change):
+    def save_model(self, request, obj, form, change):
         if not obj.ingredients.exists():
             raise ValidationError(
                 'Рецепт должен содержать хотя бы один ингредиент.')
