@@ -148,6 +148,7 @@ class Recipe(models.Model):
                 f'https://foodgrambyplahosha.ddns.net/recipes/{self.pk}/'
             )
             self.save(update_fields=['full_link'])
+
     def __str__(self):
         return self.name
 
