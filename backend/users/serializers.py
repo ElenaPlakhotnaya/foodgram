@@ -1,5 +1,7 @@
 
 
+import re
+
 from rest_framework import serializers
 
 from api.fields import Base64ImageField
@@ -15,6 +17,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'username', 'first_name',
                   'last_name', 'avatar', 'is_subscribed')
         read_only_fields = ('id',)
+
+    def validate_username(username):
+        if re.search(r'[^\w.@+-]', username):
+            raise serializers.ValidationError(
+                'В имени содержатся недопустимые символы.'
+            )
+        return username
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')

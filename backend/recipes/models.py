@@ -124,6 +124,7 @@ class Recipe(models.Model):
     )
     short_link = models.URLField(
         max_length=SHORT_LINK_LENGTH, unique=True, blank=True, null=True)
+    full_link = models.URLField()
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -132,9 +133,15 @@ class Recipe(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
         if not self.short_link:
-            self.short_link = str(self.pk)
+            self.short_link = (
+                f'https://foodgrambyplahosha.ddns.net/r/{self.pk}/'
+            )
+            while Recipe.objects.filter(short_link=self.short_link).exists():
+                self.short_link = (
+                    'https://foodgrambyplahosha.ddns.net/r/'
+                    f'{str(self.pk)+"a"}/'
+                )
             self.save(update_fields=['short_link'])
 
     def __str__(self):

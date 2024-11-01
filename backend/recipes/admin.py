@@ -5,11 +5,22 @@ from recipes.models import (Favourite, Ingredient, Recipe, RecipeIngredient,
                             RecipeTag, ShoppingCart, Tag)
 
 
+class IngredientInline(admin.TabularInline):
+    model = RecipeIngredient
+    extra = 1
+
+
+class TagInline(admin.TabularInline):
+    model = RecipeTag
+    extra = 1
+
+
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'get_ingredients', 'get_tags')
-    search_fields = ('author', 'name',)
+    search_fields = ('author__username', 'name',)
     list_filter = ('tags',)
     empty_value_display = '---'
+    inlines = [IngredientInline, TagInline]
 
     @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):

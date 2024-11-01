@@ -1,15 +1,19 @@
 from django.db.models import Sum
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import AuthorOrReadOnly
-from api.serializers import (IngredientSerializer, RecipeReadSerializer,
-                             RecipeSerializer, TagSerializer)
+from api.serializers import (FavouriteAndShoppingCrtSerializer,
+                             FavouriteSerializer, IngredientSerializer,
+                             RecipeReadSerializer, RecipeSerializer,
+                             ShoppingCartSerializer, TagSerializer)
 from recipes.models import Ingredient, Recipe, RecipeIngredient, Tag
 from users.views import CustomPagination
 
@@ -29,51 +33,57 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(detail=True, methods=['post'],
-            url_path='favorite',
-            permission_classes=[permissions.IsAuthenticated]
-            )
+    @action(detail=True, methods=['post'], url_path='favorite',
+            permission_classes=[permissions.IsAuthenticated])
     def favorite_post(self, request, pk):
-        user = request.user
-        serializer = RecipeReadSerializer()
-        try:
-            data = serializer.add_to_favorites(user, pk)
-            return Response(data, status=201)
-        except serializers.ValidationError as e:
-            return Response({'errors': str(e)}, status=400)
+        return self.add_item_to_list(request.user, pk, 'favorite')
 
     @favorite_post.mapping.delete
     def favorite_delete(self, request, pk):
-        user = request.user
-        serializer = RecipeReadSerializer()
-        try:
-            serializer.remove_from_favorites(user, pk)
-            return Response(status=204)
-        except serializers.ValidationError as e:
-            return Response({'errors': str(e)}, status=400)
+        return self.remove_item_from_list(request.user, pk, 'favorite')
 
-    @action(detail=True, methods=['post'],
-            url_path='shopping_cart',
-            permission_classes=[permissions.IsAuthenticated]
-            )
+    @action(detail=True, methods=['post'], url_path='shopping_cart',
+            permission_classes=[permissions.IsAuthenticated])
     def shopping_cart_post(self, request, pk):
-        user = request.user
-        serializer = RecipeReadSerializer()
-        try:
-            data = serializer.add_to_shopping_cart(user, pk)
-            return Response(data, status=201)
-        except serializers.ValidationError as e:
-            return Response({'errors': str(e)}, status=400)
+        return self.add_item_to_list(request.user, pk, 'shopping_cart')
 
     @shopping_cart_post.mapping.delete
     def shopping_cart_delete(self, request, pk):
-        user = request.user
-        serializer = RecipeReadSerializer()
+        return self.remove_item_from_list(request.user, pk, 'shopping_cart')
+
+    def add_item_to_list(self, user, pk, list_type):
+
         try:
-            serializer.remove_from_shopping_cart(user, pk)
-            return Response(status=204)
+            if list_type == 'favorite':
+                serializer = FavouriteSerializer()
+                favourite_item = serializer.add_to_favorites(user, pk)
+                item_data = FavouriteAndShoppingCrtSerializer(
+                    favourite_item).data
+            elif list_type == 'shopping_cart':
+                serializer = ShoppingCartSerializer()
+                shopping_cart_item = serializer.add_to_shopping_cart(user, pk)
+                item_data = FavouriteAndShoppingCrtSerializer(
+                    shopping_cart_item).data
+            return Response(item_data, status=status.HTTP_201_CREATED)
         except serializers.ValidationError as e:
-            return Response({'errors': str(e)}, status=400)
+            return Response(
+                {'errors': str(e)}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def remove_item_from_list(self, user, pk, list_type):
+
+        try:
+            if list_type == 'favorite':
+                serializer = FavouriteSerializer()
+                serializer.remove_from_favorites(user, pk)
+            elif list_type == 'shopping_cart':
+                serializer = ShoppingCartSerializer()
+                serializer.remove_from_shopping_cart(user, pk)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except serializers.ValidationError as e:
+            return Response(
+                {'errors': str(e)}, status=status.HTTP_400_BAD_REQUEST
+            )
 
     @action(detail=True, methods=['get'], url_path='get-link')
     def get_link(self, *args, **kwargs):
@@ -127,3 +137,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
     pagination_class = None
+
+
+class RecipeRedirectView(APIView):
+    def get(self, request, pk, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        full_link = recipe.full_link
+        return redirect(full_link)

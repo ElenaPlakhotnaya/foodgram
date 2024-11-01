@@ -46,6 +46,10 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
     )
+    amount = serializers.IntegerField(
+        error_messages={
+            'min_value': 'Количество не может быть меньше 1.'
+        })
 
     class Meta:
 
@@ -76,12 +80,6 @@ class CreateIngredientInRecipeSerializer(serializers.ModelSerializer):
             'id',
             'amount',
         )
-
-    def validate_amount(self, value):
-        if value <= 0:
-            raise serializers.ValidationError(
-                "Количество должно быть больше 0.")
-        return value
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -129,38 +127,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             return obj.shopping_carts.filter(user=user).exists()
         return False
 
-    def add_to_favorites(self, user, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        if recipe.favorites.filter(user=user).exists():
-            raise serializers.ValidationError(
-                'Рецепт уже был добавлен в избранное.')
-        user.favorites.create(recipe=recipe)
-        return FavouriteAndShoppingCrtSerializer(recipe).data
-
-    def remove_from_favorites(self, user, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        favourite = user.favorites.filter(recipe=recipe).first()
-        if not favourite:
-            raise serializers.ValidationError(
-                'Рецепт уже был удален из избранного.')
-        favourite.delete()
-
-    def add_to_shopping_cart(self, user, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        if recipe.shopping_carts.filter(user=user).exists():
-            raise serializers.ValidationError(
-                'Рецепт уже был добавлен в корзину.')
-        user.shopping_carts.create(recipe=recipe)
-        return FavouriteAndShoppingCrtSerializer(recipe).data
-
-    def remove_from_shopping_cart(self, user, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        shopping_cart_item = user.shopping_carts.filter(recipe=recipe).first()
-        if not shopping_cart_item:
-            raise serializers.ValidationError(
-                'Рецепт уже был удален из корзины.')
-        shopping_cart_item.delete()
-
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализация рецептов для записи."""
@@ -183,19 +149,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop('recipe_ingredients', [])
         tags = validated_data.pop('tags', [])
         recipe.tags.set(tags)
-        ingredients_in_recipe = []
-        for ingredient in ingredients:
-            ingredients_in_recipe.append(
-                RecipeIngredient(
-                    recipe=recipe,
-                    ingredient=ingredient.get('ingredient'),
-                    amount=ingredient.get('amount'),
-                )
-            )
-        RecipeIngredient.objects.bulk_create(ingredients_in_recipe)
+        RecipeIngredient.objects.bulk_create(
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient=ingredient.get('ingredient'),
+                amount=ingredient.get('amount'),
+            ) for ingredient in ingredients
+        )
 
     def create(self, validated_data):
-        print(validated_data)
         recipe = Recipe.objects.create(
             author=self.context.get('request').user,
             image=validated_data.pop('image'),
@@ -241,16 +203,18 @@ class RecipeSerializer(serializers.ModelSerializer):
         return value
 
     def validate_ingredients(self, value):
-        ingredient_list = []
+        ingredient_set = set()
+
+        if len(value) < 1:
+            raise serializers.ValidationError('Добавьте ингредиенты.')
+
         for item in value:
-            if item in ingredient_list:
+            item_tuple = tuple(sorted(item.items()))
+
+            if item_tuple in ingredient_set:
                 raise serializers.ValidationError(
                     'Ингредиенты не должны повторяться.')
-            ingredient_list.append(item)
-
-        if len(ingredient_list) < 1:
-
-            raise serializers.ValidationError('Добавьте ингридиенты.')
+            ingredient_set.add(item_tuple)
 
         return value
 
@@ -315,3 +279,55 @@ class SubscribeSerializer(serializers.ModelSerializer):
             instance.subscribing,
             context=self.context,
         ).data
+
+
+class FavouriteSerializer(serializers.ModelSerializer):
+    class Meta:
+
+        model = Recipe
+        fields = (
+            'id', 'name', 'image', 'text', 'author',
+            'ingredients', 'tags', 'cooking_time',
+        )
+
+    def add_to_favorites(self, user, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        if recipe.favorites.filter(user=user).exists():
+            raise serializers.ValidationError(
+                'Рецепт уже был добавлен в избранное.')
+        favourite_item = user.favorites.create(recipe=recipe)
+        return favourite_item.recipe
+
+    def remove_from_favorites(self, user, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        favourite = user.favorites.filter(recipe=recipe).first()
+        if not favourite:
+            raise serializers.ValidationError(
+                'Рецепт уже был удален из избранного.')
+        favourite.delete()
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    class Meta:
+
+        model = Recipe
+        fields = (
+            'id', 'name', 'image', 'text', 'author',
+            'ingredients', 'tags', 'cooking_time',
+        )
+
+    def add_to_shopping_cart(self, user, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        if recipe.shopping_carts.filter(user=user).exists():
+            raise serializers.ValidationError(
+                'Рецепт уже был добавлен в корзину.')
+        shopping_cart_item = user.shopping_carts.create(recipe=recipe)
+        return shopping_cart_item.recipe
+
+    def remove_from_shopping_cart(self, user, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        shopping_cart_item = user.shopping_carts.filter(recipe=recipe).first()
+        if not shopping_cart_item:
+            raise serializers.ValidationError(
+                'Рецепт уже был удален из корзины.')
+        shopping_cart_item.delete()
