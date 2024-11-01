@@ -282,6 +282,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
 
 class FavouriteSerializer(serializers.ModelSerializer):
+    """Сериализация избранного."""
     class Meta:
 
         model = Recipe
@@ -308,6 +309,7 @@ class FavouriteSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
+    """Сериализация корзины покупок."""
     class Meta:
 
         model = Recipe
