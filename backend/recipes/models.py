@@ -143,7 +143,11 @@ class Recipe(models.Model):
                     f'{str(self.pk)+"a"}/'
                 )
             self.save(update_fields=['short_link'])
-
+        if not self.full_link:
+            self.full_link = (
+                f'https://foodgrambyplahosha.ddns.net/recipes/{self.pk}/'
+            )
+            self.save(update_fields=['full_link'])
     def __str__(self):
         return self.name
 
