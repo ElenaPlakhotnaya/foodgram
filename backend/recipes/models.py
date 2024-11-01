@@ -124,7 +124,7 @@ class Recipe(models.Model):
     )
     short_link = models.URLField(
         max_length=SHORT_LINK_LENGTH, unique=True, blank=True, null=True)
-    full_link = models.URLField()
+    full_link = models.URLField(blank=True, null=True)
 
     class Meta:
         verbose_name = 'Рецепт'
